@@ -10,9 +10,9 @@ public class Rocket : MonoBehaviour
     AudioSource shipaudio;
 
     [Range(1,2f)]
-    public float thrustSpeed;
+    [SerializeField] float thrustSpeed;
     [Range(1, 1.5f)]
-    public float rotationSpeed;
+    [SerializeField] float rotationSpeed;
 
     // Start is called before the first frame update
     void Start()
@@ -30,10 +30,12 @@ public class Rocket : MonoBehaviour
 
     private void Thrust()
     {
+        float thrustThisFrame = thrustSpeed * Time.deltaTime;
+
         //Rocket boosts forward, can boost whilst rotating
         if (Input.GetKey(KeyCode.Space))
         {
-            rocketBody.AddRelativeForce(Vector3.up * thrustSpeed);
+            rocketBody.AddRelativeForce(Vector3.up * thrustThisFrame);
             if (!shipaudio.isPlaying) shipaudio.Play();
         }
         else shipaudio.Stop();
@@ -42,17 +44,17 @@ public class Rocket : MonoBehaviour
     {
 
         rocketBody.freezeRotation = true;
-
+        float rotationThisFrame = rotationSpeed * Time.deltaTime;
         //No rotation if both keys are being pressed at the same time 
         if (!(Input.GetKey(KeyCode.A) && Input.GetKey(KeyCode.D)))
         {
             if (Input.GetKey(KeyCode.A))
             {
-                transform.Rotate(Vector3.forward * rotationSpeed);
+                transform.Rotate(Vector3.forward * rotationThisFrame);
             }
             else if (Input.GetKey(KeyCode.D))
             {
-                transform.Rotate(Vector3.back * rotationSpeed);
+                transform.Rotate(Vector3.back * rotationThisFrame);
             }
         }
 
