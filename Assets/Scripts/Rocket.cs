@@ -1,18 +1,25 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Rocket : MonoBehaviour
 {
 
     Rigidbody rocketBody;
     AudioSource shipaudio;
+    static int currentSceneIndex = 0;
 
     [Range(1,3f)]
     [SerializeField] float thrustSpeed;
-    [Range(1, 1.1f)]
+    [Range(0.75f, 1.1f)]
     [SerializeField] float rotationSpeed;
+
+    enum State
+    {
+        Alive,
+        Dying,
+        Transending
+    }
+    State state = State.Alive;
 
     // Start is called before the first frame update
     void Start()
@@ -24,27 +31,46 @@ public class Rocket : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Thrust();
-        Rotate();
+        if(state == State.Alive)
+        {
+            Thrust();
+            Rotate();
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
     {
+        if (state != State.Alive) return;
+
         switch (collision.gameObject.tag)
         {
             case "Friendly":
                 break;
             case "Finish":
+                state = State.Transending;
+                Invoke("LoadNextScene", 1f);
                 break;
             default:
+                state = State.Dying;
+                shipaudio.Stop();
+                currentSceneIndex = -1;
+                Invoke("LoadNextScene", 1f);
                 break;
         }
+    }
+
+    private void LoadNextScene()
+    {
+          if (currentSceneIndex == SceneManager.sceneCount)
+            SceneManager.LoadScene(0);
+        else
+            SceneManager.LoadScene(++currentSceneIndex);
     }
 
     private void Thrust()
     {
         //Rocket boosts forward, can boost whilst rotating
-        if (Input.GetKey(KeyCode.Space))
+        if (Input.GetKey(KeyCode.Space) && state == State.Alive)
         {
             rocketBody.AddRelativeForce(Vector3.up * thrustSpeed);
             if (!shipaudio.isPlaying) shipaudio.Play();
