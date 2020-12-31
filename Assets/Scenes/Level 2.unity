@@ -381,6 +381,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player Ship
       objectReference: {fileID: 0}
+    - target: {fileID: 6450615738539856366, guid: 01a98fbec803b6e459fe6269bf9947bc,
+        type: 3}
+      propertyPath: RotationSpeed
+      value: 0.803
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 01a98fbec803b6e459fe6269bf9947bc, type: 3}
 --- !u!108 &705507994 stripped

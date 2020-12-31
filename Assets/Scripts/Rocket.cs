@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class Rocket : MonoBehaviour
@@ -9,9 +10,12 @@ public class Rocket : MonoBehaviour
     static int currentSceneIndex = 0;
 
     [Range(1,3f)]
-    [SerializeField] float thrustSpeed;
+    [SerializeField] float ThrustSpeed;
     [Range(0.75f, 1.1f)]
-    [SerializeField] float rotationSpeed;
+    [SerializeField] float RotationSpeed;
+    [SerializeField] AudioClip MainEngine;
+    [SerializeField] AudioClip RocketDeath;
+    [SerializeField] AudioClip RocketWin;
 
     enum State
     {
@@ -33,8 +37,8 @@ public class Rocket : MonoBehaviour
     {
         if(state == State.Alive)
         {
-            Thrust();
-            Rotate();
+            RespondToThrustInput();
+            RespondToRotateInput();
         }
     }
 
@@ -47,16 +51,22 @@ public class Rocket : MonoBehaviour
             case "Friendly":
                 break;
             case "Finish":
-                state = State.Transending;
-                Invoke("LoadNextScene", 1f);
+                ProcessFinishing();
                 break;
             default:
-                state = State.Dying;
-                shipaudio.Stop();
-                currentSceneIndex = -1;
-                Invoke("LoadNextScene", 1f);
+                ProcessDying();
                 break;
         }
+    }
+
+    private void ProcessFinishing()
+    {
+        state = State.Transending;
+        shipaudio.Stop();
+
+        shipaudio.PlayOneShot(RocketWin);
+
+        Invoke("LoadNextScene", 1f);
     }
 
     private void LoadNextScene()
@@ -67,17 +77,30 @@ public class Rocket : MonoBehaviour
             SceneManager.LoadScene(++currentSceneIndex);
     }
 
-    private void Thrust()
+    private void ProcessDying()
+    {
+        state = State.Dying;
+        shipaudio.Stop();
+
+        shipaudio.PlayOneShot(RocketDeath);
+
+        currentSceneIndex = -1;
+        Invoke("LoadNextScene", 1f);
+        return;
+    }
+
+    private void RespondToThrustInput()
     {
         //Rocket boosts forward, can boost whilst rotating
         if (Input.GetKey(KeyCode.Space) && state == State.Alive)
         {
-            rocketBody.AddRelativeForce(Vector3.up * thrustSpeed);
-            if (!shipaudio.isPlaying) shipaudio.Play();
+            rocketBody.AddRelativeForce(Vector3.up * ThrustSpeed);
+            if (!shipaudio.isPlaying) shipaudio.PlayOneShot(MainEngine);
         }
         else shipaudio.Stop();
     }
-    private void Rotate()
+
+    private void RespondToRotateInput()
     {
 
         rocketBody.freezeRotation = true;
@@ -87,11 +110,11 @@ public class Rocket : MonoBehaviour
         {
             if (Input.GetKey(KeyCode.A))
             {
-                transform.Rotate(Vector3.forward * rotationSpeed);
+                transform.Rotate(Vector3.forward * RotationSpeed);
             }
             else if (Input.GetKey(KeyCode.D))
             {
-                transform.Rotate(Vector3.back * rotationSpeed);
+                transform.Rotate(Vector3.back * RotationSpeed);
             }
         }
 
