@@ -13,9 +13,14 @@ public class Rocket : MonoBehaviour
     [SerializeField] float ThrustSpeed;
     [Range(0.75f, 1.1f)]
     [SerializeField] float RotationSpeed;
+
     [SerializeField] AudioClip MainEngine;
     [SerializeField] AudioClip RocketDeath;
     [SerializeField] AudioClip RocketWin;
+
+    [SerializeField] ParticleSystem RocketThrustparticles;
+    [SerializeField] ParticleSystem DeathParticles;
+    [SerializeField] ParticleSystem LevelCompleteParticles;
 
     enum State
     {
@@ -46,6 +51,8 @@ public class Rocket : MonoBehaviour
     {
         if (state != State.Alive) return;
 
+        RocketThrustparticles.Stop();
+
         switch (collision.gameObject.tag)
         {
             case "Friendly":
@@ -65,6 +72,7 @@ public class Rocket : MonoBehaviour
         shipaudio.Stop();
 
         shipaudio.PlayOneShot(RocketWin);
+        LevelCompleteParticles.Play();
 
         Invoke("LoadNextScene", 1f);
     }
@@ -83,6 +91,7 @@ public class Rocket : MonoBehaviour
         shipaudio.Stop();
 
         shipaudio.PlayOneShot(RocketDeath);
+        DeathParticles.Play();
 
         currentSceneIndex = -1;
         Invoke("LoadNextScene", 1f);
@@ -96,8 +105,15 @@ public class Rocket : MonoBehaviour
         {
             rocketBody.AddRelativeForce(Vector3.up * ThrustSpeed);
             if (!shipaudio.isPlaying) shipaudio.PlayOneShot(MainEngine);
+
+            if(!RocketThrustparticles.isPlaying) RocketThrustparticles.Play();
+
         }
-        else shipaudio.Stop();
+        else
+        {
+            shipaudio.Stop();
+            RocketThrustparticles.Stop();
+        }
     }
 
     private void RespondToRotateInput()
