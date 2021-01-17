@@ -8,11 +8,14 @@ public class Rocket : MonoBehaviour
     Rigidbody rocketBody;
     AudioSource shipaudio;
     static int currentSceneIndex = 0;
+    bool collisionsOn = true;
 
     [Range(1,3f)]
     [SerializeField] float ThrustSpeed;
     [Range(0.75f, 1.1f)]
     [SerializeField] float RotationSpeed;
+
+    [SerializeField] float levelLoadDelay = 2f;
 
     [SerializeField] AudioClip MainEngine;
     [SerializeField] AudioClip RocketDeath;
@@ -40,6 +43,8 @@ public class Rocket : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if(Debug.isDebugBuild) respondToDebugKeyInput();
+
         if(state == State.Alive)
         {
             RespondToThrustInput();
@@ -47,9 +52,22 @@ public class Rocket : MonoBehaviour
         }
     }
 
+    private void respondToDebugKeyInput()
+    {
+        switch (Input.inputString)
+        {
+            case "l":
+                Invoke("LoadNextScene", 0f);
+                break;
+            case "c":
+                collisionsOn = !collisionsOn;
+                break;
+        }
+    }
+
     private void OnCollisionEnter(Collision collision)
     {
-        if (state != State.Alive) return;
+        if (state != State.Alive  || !collisionsOn) return;
 
         RocketThrustparticles.Stop();
 
@@ -74,13 +92,16 @@ public class Rocket : MonoBehaviour
         shipaudio.PlayOneShot(RocketWin);
         LevelCompleteParticles.Play();
 
-        Invoke("LoadNextScene", 1f);
+        Invoke("LoadNextScene", levelLoadDelay);
     }
 
     private void LoadNextScene()
     {
-          if (currentSceneIndex == SceneManager.sceneCount)
+        if (currentSceneIndex == SceneManager.sceneCountInBuildSettings - 1)
+        {
+            currentSceneIndex = 0;
             SceneManager.LoadScene(0);
+        }
         else
             SceneManager.LoadScene(++currentSceneIndex);
     }
@@ -93,8 +114,8 @@ public class Rocket : MonoBehaviour
         shipaudio.PlayOneShot(RocketDeath);
         DeathParticles.Play();
 
-        currentSceneIndex = -1;
-        Invoke("LoadNextScene", 1f);
+        currentSceneIndex = 0;
+        Invoke("LoadNextScene", levelLoadDelay);
         return;
     }
 
