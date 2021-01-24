@@ -7,8 +7,7 @@ public class Rocket : MonoBehaviour
 
     Rigidbody rocketBody;
     AudioSource shipaudio;
-    static int currentSceneIndex = 0;
-    bool collisionsOn = true;
+    bool collisionsEnabled = true;
 
     [Range(1,3f)]
     [SerializeField] float ThrustSpeed;
@@ -60,14 +59,14 @@ public class Rocket : MonoBehaviour
                 Invoke("LoadNextScene", 0f);
                 break;
             case "c":
-                collisionsOn = !collisionsOn;
+                collisionsEnabled = !collisionsEnabled;
                 break;
         }
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (state != State.Alive  || !collisionsOn) return;
+        if (state != State.Alive  || !collisionsEnabled) return;
 
         RocketThrustparticles.Stop();
 
@@ -97,13 +96,14 @@ public class Rocket : MonoBehaviour
 
     private void LoadNextScene()
     {
-        if (currentSceneIndex == SceneManager.sceneCountInBuildSettings - 1)
+        int currentScene = SceneManager.GetActiveScene().buildIndex;
+
+        if (currentScene == SceneManager.sceneCountInBuildSettings - 1)
         {
-            currentSceneIndex = 0;
             SceneManager.LoadScene(0);
         }
         else
-            SceneManager.LoadScene(++currentSceneIndex);
+            SceneManager.LoadScene(++currentScene);
     }
 
     private void ProcessDying()
@@ -114,7 +114,6 @@ public class Rocket : MonoBehaviour
         shipaudio.PlayOneShot(RocketDeath);
         DeathParticles.Play();
 
-        currentSceneIndex = 0;
         Invoke("LoadNextScene", levelLoadDelay);
         return;
     }
@@ -140,7 +139,7 @@ public class Rocket : MonoBehaviour
     private void RespondToRotateInput()
     {
 
-        rocketBody.freezeRotation = true;
+        rocketBody.angularVelocity = Vector3.zero;
 
         //No rotation if both keys are being pressed at the same time 
         if (!(Input.GetKey(KeyCode.A) && Input.GetKey(KeyCode.D)))
@@ -154,8 +153,6 @@ public class Rocket : MonoBehaviour
                 transform.Rotate(Vector3.back * RotationSpeed);
             }
         }
-
-        rocketBody.freezeRotation = false;
     }
 
 
